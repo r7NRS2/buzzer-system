@@ -1,3 +1,4 @@
+const path = require("path");
 const express = require("express");
 const app = express();
 
@@ -9,10 +10,10 @@ let winner = "";
 let scoreA = 0;
 let scoreB = 0;
 
-app.use(express.static(__dirname));
+// مهم جدًا: يخلي Vercel يقرأ ملفات HTML
+app.use(express.static(path.join(__dirname)));
 
 io.on("connection", (socket) => {
-    console.log("Client Connected");
 
     socket.on("press", (team) => {
         if (!locked) {
@@ -45,8 +46,8 @@ io.on("connection", (socket) => {
     });
 });
 
+// تشغيل السيرفر داخل Vercel
 const PORT = process.env.PORT || 2000;
-
 http.listen(PORT, () => {
-    console.log("Server running on port " + PORT);
+    console.log("Server running on " + PORT);
 });
