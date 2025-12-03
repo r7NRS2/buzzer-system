@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>جهاز الفريق</title>
+<script src="/socket.io/socket.io.js"></script>
+<style>
+body { text-align:center; background:#111; color:white; font-family: 'Tahoma'; }
+button { width:90%; height:180px; margin-top:40px; font-size:36px; border-radius:20px; border:none; color:white; }
+#a { background:#1E90FF; }
+#b { background:#FF3030; }
+#winner { font-size:45px; margin-top:30px; }
+h1 { font-size:42px; margin-top:25px; }
+</style>
+</head>
+<body>
+<h1>📢 جهاز الفريق</h1>
+<div id="select">
+  <button onclick="setRole('A')" id="a">أنا فريق A</button><br>
+  <button onclick="setRole('B')" id="b">أنا فريق B</button>
+</div>
+<div id="play" style="display:none;">
+    <h2 id="teamName"></h2>
+    <button id="teamBtn" onclick="pressTeam()">اضغط!</button>
+    <div id="winner"></div>
+</div>
+<script>
+let socket = io();
+let team = "";
+let locked = false;
+
+function setRole(t){
+    team = t;
+    document.getElementById("select").style.display="none";
+    document.getElementById("play").style.display="block";
+    if (team === "A"){
+        document.getElementById("teamName").innerText = "فريق A";
+        document.getElementById("teamBtn").style.background="#1E90FF";
+    } else {
+        document.getElementById("teamName").innerText = "فريق B";
+        document.getElementById("teamBtn").style.background="#FF3030";
+    }
+}
+
+function pressTeam(){
+    if (!locked){
+        socket.emit("press", team);
+    }
+}
+
+socket.on("winner", (t)=>{
+    locked = true;
+    document.getElementById("winner").innerHTML =
+        (t === team) ? "🎉 أنت ضغطت أول!" : "❌ الفريق الآخر سبقك!";
+});
+
+socket.on("resetAll", ()=>{
+    locked = false;
+    document.getElementById("winner").innerHTML = "";
+});
+</script>
+</body>
+</html>

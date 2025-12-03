@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>لوحة التحكم</title>
+<script src="/socket.io/socket.io.js"></script>
+<style>
+body { text-align:center; background:#222; color:white; font-family:'Tahoma'; }
+h1 { margin-top:30px; font-size:48px; }
+input { width:70%; padding:15px; font-size:25px; border-radius:12px; border:none; margin-top:20px; }
+button { margin:12px; padding:18px; font-size:28px; border-radius:15px; border:none; color:white; }
+#loginBtn { background:#27ae60; width:70%; }
+#reset { background:#444; width:60%; }
+#mystery { background:#9b59b6; width:70%; }
+.scoreBox { font-size:35px; margin-top:20px; }
+#winner { font-size:45px; margin:20px 0; }
+</style>
+</head>
+<body>
+<div id="login">
+  <h1>🔐 دخول الحكم</h1>
+  <input id="password" type="password" placeholder="كلمة السر">
+  <br>
+  <button id="loginBtn" onclick="login()">دخول</button>
+  <div id="error" style="color:#e74c3c; font-size:25px; margin-top:15px;"></div>
+</div>
+<div id="panel" style="display:none;">
+<h1>🛠 لوحة التحكم</h1>
+<div id="winner"></div>
+<button id="reset" onclick="resetGame()">🔄 إعادة الجولة</button>
+<h2>🎁 المستري بوكس</h2>
+<button id="mystery" onclick="openMystery()">افتح الصندوق</button>
+<div id="mysteryResult" style="font-size:38px; margin-top:20px; color:gold;"></div>
+<h2>📊 النقاط</h2>
+<div class="scoreBox">
+    فريق A: <span id="scoreA">0</span>
+    <button style="background:#1E90FF;" onclick="add('A')">+</button>
+    <button style="background:#1E90FF;" onclick="removePoint('A')">-</button>
+</div>
+<div class="scoreBox">
+    فريق B: <span id="scoreB">0</span>
+    <button style="background:#FF3030;" onclick="add('B')">+</button>
+    <button style="background:#FF3030;" onclick="removePoint('B')">-</button>
+</div>
+</div>
+<script>
+let socket = io();
+const PASSWORD = "1212";
+
+function login(){
+  let pass = document.getElementById("password").value;
+  if (pass === PASSWORD){
+    document.getElementById("login").style.display = "none";
+    document.getElementById("panel").style.display = "block";
+  } else {
+    document.getElementById("error").innerText = "❌ كلمة السر خاطئة";
+  }
+}
+
+let prizes = [
+  "🎁 دبل النقاط",
+  "🎁 خصم نقطة",
+  "🎁 إضافة نقطة",
+  "🎁 سؤال خاص",
+  "🎁 تجميد الخصم",
+  "🎁 جولة إضافية",
+  "🎁 بطاقة إنقاذ"
+];
+
+socket.on("winner", (team)=>{
+    document.getElementById("winner").innerHTML =
+        (team === "A") ? "🔵 فريق A ضغط أول!" : "🔴 فريق B ضغط أول!";
+});
+
+socket.on("resetAll", ()=>{
+    document.getElementById("winner").innerHTML = "";
+    document.getElementById("mysteryResult").innerHTML = "";
+});
+
+socket.on("mysteryResult", (p)=>{
+    document.getElementById("mysteryResult").innerHTML = p;
+});
+
+socket.on("scoreUpdate", (d)=>{
+    document.getElementById("scoreA").innerHTML = d.A;
+    document.getElementById("scoreB").innerHTML = d.B;
+});
+
+function resetGame(){ socket.emit("reset"); }
+function openMystery(){
+    let prize = prizes[Math.floor(Math.random()*prizes.length)];
+    socket.emit("mystery", prize);
+}
+function add(team){ socket.emit("addPoint", team); }
+function removePoint(team){ socket.emit("removePoint", team); }
+</script>
+</body>
+</html>
